@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Add Engineer - AI Field Management</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { background-color: #f8f9fa; }
+    .card { border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    .card-header { background-color: #0d6efd; color: #fff; font-weight: bold; }
+    .form-label { font-weight: 600; }
+    .img-preview {
+      width: 150px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+<div class="container mt-5">
+  <div class="card p-4">
+    <div class="card-header mb-3">
+      <i class="fa-solid fa-plus"></i> Add New Engineer
+    </div>
+    <form id="addEngineerForm" enctype="multipart/form-data">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Name</label>
+          <input type="text" class="form-control" id="engineerName" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Phone</label>
+          <input type="text" class="form-control" id="engineerPhone" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Status</label>
+          <select class="form-select" id="engineerStatus">
+            <option value="online">Online</option>
+            <option value="offline">Offline</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Country</label>
+          <input type="text" class="form-control" id="engineerCountry">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Primary Skills</label>
+          <input type="text" class="form-control" id="engineerSkills" placeholder="Comma-separated">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Certifications</label>
+          <input type="text" class="form-control" id="engineerCerts" placeholder="Comma-separated">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Education</label>
+          <input type="text" class="form-control" id="engineerEducation" placeholder="BTech, MBA...">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Work Experience</label>
+          <input type="number" class="form-control" id="engineerExperience" placeholder="Years">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Summary</label>
+          <textarea class="form-control" id="engineerSummary" rows="2"></textarea>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Profile Image</label>
+          <input type="file" class="form-control" id="engineerImage" accept="image/*">
+          <img id="imagePreview" class="img-preview" src="#" alt="Image Preview" style="display:none;">
+        </div>
+      </div>
+      <div class="mt-4 d-flex justify-content-end">
+        <button type="submit" class="btn btn-success"><i class="fa-solid fa-save"></i> Save Engineer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("addEngineerForm");
+  const imageInput = document.getElementById("engineerImage");
+  const imagePreview = document.getElementById("imagePreview");
+
+  imageInput.addEventListener("change", () => {
+    const file = imageInput.files[0];
+    if (file) {
+      imagePreview.src = URL.createObjectURL(file);
+      imagePreview.style.display = "block";
+    }
+  });
+
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+
+    const formData = new FormData();
+    formData.append("name", document.getElementById("engineerName").value);
+    formData.append("phone", document.getElementById("engineerPhone").value);
+    formData.append("status", document.getElementById("engineerStatus").value);
+    formData.append("country", document.getElementById("engineerCountry").value);
+    formData.append("primary_skills", document.getElementById("engineerSkills").value);
+    formData.append("certifications", document.getElementById("engineerCerts").value);
+    formData.append("education", document.getElementById("engineerEducation").value);
+    formData.append("work_experience", document.getElementById("engineerExperience").value);
+    formData.append("summary", document.getElementById("engineerSummary").value);
+    if (imageInput.files[0]) {
+      formData.append("image", imageInput.files[0]);
+    }
+
+    try {
+      const res = await fetch("/api/engineers/", {
+        method: "POST",
+        body: formData
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(JSON.stringify(err));
+      }
+      alert("Engineer added successfully!");
+      window.location.href = "/engineers/";
+    } catch (err) {
+      alert("Error adding engineer: " + err.message);
+      console.error(err);
+    }
+  });
+});
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

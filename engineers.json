@@ -1,0 +1,19 @@
+[
+  {
+    "model": "core.engineer",
+    "pk": 1,
+    "fields": {
+      "name": "Amit Rikhari",
+      "phone": "9627815619",
+      "status": "online",
+      "certifications": "AWS, Python",
+      "education": "BCA, M.Sc Data Science",
+      "work_experience": "4 years network analysis",
+      "country": "India",
+      "primary_skills": "Python, SQL, ML",
+      "summary": "Experienced in network and AI projects",
+      "created_at": "2025-08-29T10:00:00Z",
+      "updated_at": "2025-08-29T10:00:00Z"
+    }
+  }
+]
