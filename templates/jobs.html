@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Jobs - AI Field Management</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="container mt-4">
+    <h2 class="mb-3">Jobs</h2>
+
+    <!-- Add Job Form -->
+    <form id="jobForm" class="row g-3 mb-4">
+      <div class="col-md-2">
+        <input type="text" class="form-control" id="jobTitle" placeholder="Job Title" required>
+      </div>
+      <div class="col-md-2">
+        <select id="jobStatus" class="form-control">
+          <option value="pending">Pending</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="in_progress">In Progress</option>
+          <option value="completed">Completed</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <select id="jobPriority" class="form-control">
+          <option value="low">Low</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High</option>
+        </select>
+      </div>
+      <!-- ✅ Client Dropdown -->
+      <div class="col-md-3">
+        <select id="jobClient" class="form-control" required></select>
+      </div>
+      <!-- ✅ Engineer Dropdown -->
+      <div class="col-md-2">
+        <select id="jobEngineer" class="form-control"></select>
+      </div>
+      <div class="col-md-1">
+        <button type="submit" class="btn btn-primary w-100">Add</button>
+      </div>
+    </form>
+
+    <!-- Jobs Table -->
+    <div class="card">
+      <div class="card-header bg-white"><h5 class="mb-0">All Jobs</h5></div>
+      <div class="card-body p-0">
+        <table class="table table-striped table-hover mb-0" id="jobsTable">
+          <thead class="table-light">
+            <tr>
+              <th>ID</th><th>Title</th><th>Status</th><th>Priority</th>
+              <th>Client</th><th>Engineer</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const jobsTable = document.querySelector("#jobsTable tbody");
+  const clientSelect = document.querySelector("#jobClient");
+  const engineerSelect = document.querySelector("#jobEngineer");
+
+  // Load Jobs
+  function loadJobs() {
+    fetch("/api/jobs/")
+      .then(res => res.json())
+      .then(data => {
+        jobsTable.innerHTML = "";
+        data.forEach(job => {
+          jobsTable.innerHTML += `
+            <tr>
+              <td>${job.job_code}</td>
+              <td>${job.title}</td>
+              <td><span class="badge bg-${job.status === "completed" ? "success" : job.status === "in_progress" ? "primary" : "secondary"}">${job.status}</span></td>
+              <td><span class="badge bg-${job.priority === "high" ? "danger" : job.priority === "low" ? "success" : "warning"}">${job.priority}</span></td>
+              <td>${job.client ? job.client.name : "-"}</td>
+              <td>${job.engineer ? job.engineer.name : "Unassigned"}</td>
+              <td><button class="btn btn-sm btn-danger" onclick="deleteJob(${job.id})">Delete</button></td>
+            </tr>`;
+        });
+      })
+      .catch(err => console.error("Error loading jobs:", err));
+  }
+
+  // Load Clients (for dropdown)
+  function loadClients() {
+    fetch("/api/clients/")
+      .then(res => res.json())
+      .then(clients => {
+        clientSelect.innerHTML = "<option value=''>-- Select Client --</option>";
+        clients.forEach(c => {
+          clientSelect.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+        });
+      });
+  }
+
+  // Load Engineers (for dropdown)
+  function loadEngineers() {
+    fetch("/api/engineers/")
+      .then(res => res.json())
+      .then(engineers => {
+        engineerSelect.innerHTML = "<option value=''>-- None --</option>";
+        engineers.forEach(e => {
+          engineerSelect.innerHTML += `<option value="${e.id}">${e.name}</option>`;
+        });
+      });
+  }
+
+  // Add Job
+  document.querySelector("#jobForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const payload = {
+      job_code: "JOB-" + Math.floor(Math.random() * 10000),
+      title: document.querySelector("#jobTitle").value,
+      status: document.querySelector("#jobStatus").value,
+      priority: document.querySelector("#jobPriority").value,
+      client_id: parseInt(clientSelect.value),
+      engineer_id: engineerSelect.value ? parseInt(engineerSelect.value) : null
+    };
+
+    fetch("/api/jobs/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+    .then(res => {
+      if (!res.ok) {
+        return res.json().then(err => { throw new Error(JSON.stringify(err)); });
+      }
+      return res.json();
+    })
+    .then(() => {
+      document.querySelector("#jobForm").reset();
+      loadJobs();
+    })
+    .catch(err => {
+      alert("Error adding job: " + err.message);
+      console.error("Job add error:", err);
+    });
+  });
+
+  // Delete Job
+  window.deleteJob = function(id) {
+    if (!confirm("Delete this job?")) return;
+    fetch("/api/jobs/" + id + "/", { method: "DELETE" })
+      .then(() => loadJobs());
+  };
+
+  // Init
+  loadJobs();
+  loadClients();
+  loadEngineers();
+});
+</script>
+</body>
+</html>

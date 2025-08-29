@@ -1,0 +1,66 @@
+{% extends "index.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Engineers</h2>
+
+  <form id="engineerForm" class="mb-4">
+    <div class="row">
+      <div class="col-md-6"><input type="text" class="form-control" id="engineerName" placeholder="Engineer Name" required></div>
+      <div class="col-md-4">
+        <select id="engineerStatus" class="form-control">
+          <option value="online">Online</option>
+          <option value="busy">Busy</option>
+          <option value="offline">Offline</option>
+        </select>
+      </div>
+      <div class="col-md-2"><button type="submit" class="btn btn-primary">Add</button></div>
+    </div>
+  </form>
+
+  <table class="table table-striped" id="engineersTable">
+    <thead><tr><th>Name</th><th>Status</th><th>Action</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const table = document.querySelector("#engineersTable tbody");
+
+  function loadEngineers() {
+    fetch("/api/engineers/")
+      .then(res => res.json())
+      .then(data => {
+        table.innerHTML = "";
+        data.forEach(e => {
+          table.innerHTML += `
+            <tr>
+              <td>${e.name}</td>
+              <td>${e.status}</td>
+              <td><button class="btn btn-sm btn-danger" onclick="deleteEngineer(${e.id})">Delete</button></td>
+            </tr>`;
+        });
+      });
+  }
+
+  document.querySelector("#engineerForm").addEventListener("submit", e => {
+    e.preventDefault();
+    fetch("/api/engineers/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: document.querySelector("#engineerName").value,
+        status: document.querySelector("#engineerStatus").value
+      })
+    }).then(() => loadEngineers());
+  });
+
+  window.deleteEngineer = function(id) {
+    fetch("/api/engineers/" + id + "/", { method: "DELETE" })
+      .then(() => loadEngineers());
+  };
+
+  loadEngineers();
+});
+</script>
+{% endblock %}

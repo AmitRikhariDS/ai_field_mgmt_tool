@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Field Management System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; }
+    .sidebar { background-color:#2c3e50; color:white; height:100vh; position:fixed; padding-top:60px; width:250px; }
+    .sidebar .nav-link { color: rgba(255,255,255,0.85); }
+    .sidebar .nav-link.active, .sidebar .nav-link:hover { background: rgba(255,255,255,0.1); color:white; }
+    .main-content { margin-left:250px; padding:20px; padding-top:80px; }
+    .card { border:none; border-radius:10px; box-shadow:0 4px 6px rgba(0,0,0,0.05); margin-bottom:20px; }
+    .stats-card { text-align:center; padding:20px; }
+    .engineer-card { text-align:center; margin:10px; }
+    .engineer-card img { width:70px; height:70px; border-radius:50%; margin-bottom:10px; }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-light fixed-top bg-white shadow-sm">
+    <div class="container-fluid">
+      <a class="navbar-brand ms-3 fw-bold" href="/">
+        <i class="fas fa-microchip me-2 text-primary"></i> AI Field Management
+      </a>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item dropdown me-3">
+            <a class="nav-link dropdown-toggle" href="#" id="notificationsDropdown" role="button" data-bs-toggle="dropdown">
+              <i class="fas fa-bell"></i>
+              <span class="badge bg-danger rounded-pill">3</span>
+            </a>
+          </li>
+          <li class="nav-item dropdown me-3">
+            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+              <img src="https://ui-avatars.com/api/?name=Admin+User&background=3498db&color=fff" alt="User" class="rounded-circle" width="30">
+              <span class="ms-2">Admin User</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <ul class="nav flex-column">
+      <li class="nav-item"><a class="nav-link active" href="/"><i class="fas fa-home"></i> <span>Dashboard</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="/jobs/"><i class="fas fa-briefcase"></i> <span>Jobs</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="/engineers/"><i class="fas fa-users"></i> <span>Engineers</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="/clients/"><i class="fas fa-building"></i><span>Clients</span></a></li>
+
+      <li class="nav-item"><a class="nav-link" href="/invoices/"><i class="fas fa-file-invoice"></i> <span>Invoices</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-calendar-alt"></i> <span>Scheduling</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-map-marker-alt"></i> <span>Geo-Tracking</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-chart-bar"></i> <span>Reports</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-cog"></i> <span>Settings</span></a></li>
+    </ul>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="container-fluid">
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <h1 class="h3 mb-0">Dashboard</h1>
+          <p class="text-muted">Welcome to AI Field Management System</p>
+        </div>
+        <div class="col-md-6 d-flex justify-content-end align-items-center">
+          <button class="btn btn-primary me-2"><i class="fas fa-plus me-1"></i> New Job</button>
+          <button class="btn btn-outline-secondary"><i class="fas fa-filter me-1"></i> Filter</button>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4"><div class="card stats-card"><i class="fas fa-tasks"></i><h2>0</h2><p>Active Jobs</p></div></div>
+        <div class="col-xl-3 col-md-6 mb-4"><div class="card stats-card"><i class="fas fa-users"></i><h2>0</h2><p>Active Engineers</p></div></div>
+        <div class="col-xl-3 col-md-6 mb-4"><div class="card stats-card"><i class="fas fa-check-circle"></i><h2>0%</h2><p>Completion Rate</p></div></div>
+        <div class="col-xl-3 col-md-6 mb-4"><div class="card stats-card"><i class="fas fa-clock"></i><h2>0h</h2><p>Avg. Response Time</p></div></div>
+      </div>
+
+      <!-- Charts and Engineers -->
+      <div class="row">
+        <div class="col-lg-8">
+          <div class="card">
+            <div class="card-header bg-white"><h5 class="card-title mb-0">Job Status Overview</h5></div>
+            <div class="card-body"><canvas id="jobStatusChart" height="250"></canvas></div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card">
+            <div class="card-header bg-white"><h5 class="card-title mb-0">Active Engineers</h5></div>
+            <div class="card-body d-flex flex-wrap" id="engineersList">
+              <p class="text-muted">Loading engineers...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Jobs -->
+      <div class="row mt-4">
+        <div class="col-lg-12">
+          <div class="card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+              <h5 class="card-title mb-0">Recent Jobs</h5>
+              <a href="/jobs/" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                  <thead class="table-light"><tr><th>Job ID</th><th>Client</th><th>Engineer</th><th>Status</th><th>Priority</th><th>Action</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Dashboard Stats + Jobs
+    fetch('/api/stats/')
+      .then(res => res.json())
+      .then(data => {
+        document.querySelectorAll('.stats-card')[0].querySelector('h2').textContent = data.total_jobs;
+        document.querySelectorAll('.stats-card')[1].querySelector('h2').textContent = data.active_engineers;
+        document.querySelectorAll('.stats-card')[2].querySelector('h2').textContent = data.completion_rate + '%';
+        document.querySelectorAll('.stats-card')[3].querySelector('h2').textContent = data.avg_response_time;
+
+        const tbody = document.querySelector('table.table tbody');
+        tbody.innerHTML = '';
+        (data.recent_jobs || []).forEach(job => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${job.job_code || '#'}</td>
+            <td>${job.client ? job.client.name : ''}</td>
+            <td>${job.engineer ? job.engineer.name : 'Unassigned'}</td>
+            <td><span class="badge bg-${job.status === 'completed' ? 'success' : job.status === 'in_progress' ? 'primary' : 'secondary'}">${job.status}</span></td>
+            <td><span class="badge bg-${job.priority === 'high' ? 'danger' : job.priority === 'low' ? 'success' : 'warning'}">${job.priority}</span></td>
+            <td><a href="/jobs/" class="btn btn-sm btn-outline-secondary">View</a></td>`;
+          tbody.appendChild(row);
+        });
+      });
+
+    // Engineers Section
+    fetch('/api/engineers/')
+      .then(res => res.json())
+      .then(engineers => {
+        const container = document.getElementById('engineersList');
+        container.innerHTML = '';
+        engineers.forEach(e => {
+          const statusColor = e.status === "online" ? "success" : e.status === "busy" ? "warning" : "danger";
+          container.innerHTML += `
+            <div class="engineer-card flex-fill">
+              <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(e.name)}&background=3498db&color=fff" alt="Engineer">
+              <h6>${e.name}</h6>
+              <span class="badge bg-${statusColor}">${e.status}</span>
+            </div>
+          `;
+        });
+      });
+
+    // Job Status Chart (dummy data)
+    const ctx = document.getElementById('jobStatusChart').getContext('2d');
+    const jobStatusChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+        datasets: [
+          { label: 'Completed', data: Array(12).fill().map(()=>Math.floor(Math.random()*30)), backgroundColor: '#2ecc71' },
+          { label: 'In Progress', data: Array(12).fill().map(()=>Math.floor(Math.random()*20)), backgroundColor: '#3498db' },
+          { label: 'Pending', data: Array(12).fill().map(()=>Math.floor(Math.random()*10)), backgroundColor: '#f39c12' }
+        ]
+      },
+      options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+  });
+  </script>
+</body>
+</html>

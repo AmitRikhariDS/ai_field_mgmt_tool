@@ -1,0 +1,36 @@
+{% extends "index.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Invoices</h2>
+
+  <table class="table table-striped" id="invoicesTable">
+    <thead><tr><th>Invoice No</th><th>Client</th><th>Amount</th><th>Status</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const table = document.querySelector("#invoicesTable tbody");
+
+  function loadInvoices() {
+    fetch("/api/invoices/")
+      .then(res => res.json())
+      .then(data => {
+        table.innerHTML = "";
+        data.forEach(inv => {
+          table.innerHTML += `
+            <tr>
+              <td>${inv.invoice_no}</td>
+              <td>${inv.client}</td>
+              <td>${inv.amount}</td>
+              <td>${inv.paid ? "Paid" : "Unpaid"}</td>
+            </tr>`;
+        });
+      });
+  }
+
+  loadInvoices();
+});
+</script>
+{% endblock %}
