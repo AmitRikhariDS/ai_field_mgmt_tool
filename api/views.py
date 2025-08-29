@@ -1,3 +1,5 @@
+from multiprocessing import context
+from django.shortcuts import render
 from rest_framework import generics, views
 from rest_framework.response import Response
 from core.models import Job, Engineer, Client
@@ -154,4 +156,141 @@ class InvoiceDetailView(generics.RetrieveAPIView):
 #     queryset = Invoice.objects.all()
 #     serializer_class = InvoiceSerializer
 #     permission_classes = [AllowAny]
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import Group
+from core.models import Job, Engineer, Invoice, Client
 
+# ---------------- Dashboard ----------------
+@login_required
+def index(request):
+    user = request.user
+
+    jobs = []
+    engineers = []
+    invoices = []
+
+    # PMO/Admin: full access
+    if user.groups.filter(name__in=['PMO', 'Admin']).exists():
+        jobs = Job.objects.all()
+        engineers = Engineer.objects.all()
+        invoices = Invoice.objects.all()
+
+    # Field Engineer: only their assigned jobs
+    elif user.groups.filter(name='Field Engineer').exists():
+        try:
+            engineer = Engineer.objects.get(user=user)
+            jobs = Job.objects.filter(engineer=engineer)
+            invoices = Invoice.objects.filter(job__engineer=engineer)
+        except Engineer.DoesNotExist:
+            jobs = Job.objects.none()
+            invoices = Invoice.objects.none()
+
+    # Account Team: invoices and reports only
+    elif user.groups.filter(name='Account Team').exists():
+        invoices = Invoice.objects.all()
+        jobs = Job.objects.none()
+        engineers = Engineer.objects.none()
+
+    # Client: only their own jobs/invoices
+    elif user.groups.filter(name='Client').exists():
+        try:
+            client = Client.objects.get(user=user)
+            jobs = Job.objects.filter(client=client)
+            invoices = Invoice.objects.filter(client=client)
+        except Client.DoesNotExist:
+            jobs = Job.objects.none()
+            invoices = Invoice.objects.none()
+
+    return render(request, 'index.html', {
+        'jobs': jobs,
+        'engineers': engineers,
+        'invoices': invoices
+    })
+
+# ---------------- Optional: API Views ----------------
+from rest_framework import viewsets
+from .serializers import JobSerializer, EngineerSerializer, InvoiceSerializer
+from core.models import Job, Engineer, Invoice
+from rest_framework.permissions import IsAuthenticated
+
+class JobViewSet(viewsets.ModelViewSet):
+    queryset = Job.objects.all()
+    serializer_class = JobSerializer
+    permission_classes = [IsAuthenticated]
+
+class EngineerViewSet(viewsets.ModelViewSet):
+    queryset = Engineer.objects.all()
+    serializer_class = EngineerSerializer
+    permission_classes = [IsAuthenticated]
+
+class InvoiceViewSet(viewsets.ModelViewSet):
+    queryset = Invoice.objects.all()
+    serializer_class = InvoiceSerializer
+    permission_classes = [IsAuthenticated]
+
+
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+
+
+@login_required
+def jobs_page(request):
+    return render(request, 'jobs.html')
+
+@login_required
+def engineers_page(request):
+    return render(request, 'engineers.html')
+
+@login_required
+def clients_page(request):
+    return render(request, 'clients.html')
+
+@login_required
+def invoices_page(request):
+    return render(request, 'invoices.html')
+
+@login_required
+def reports_page(request):
+    return render(request, 'reports.html')
+
+
+# api/views.py
+from django.shortcuts import render, redirect
+from django.contrib.auth import logout
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def logout_view(request):
+    logout(request)
+    return render(request, 'logout.html')  # new logout page
+
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def index(request):
+    total_jobs = Job.objects.count()
+    active_engineers = Engineer.objects.filter(status='active').count()
+    completion_rate = 75  # replace with actual calculation
+    avg_response_time = 2  # replace with actual calculation
+    recent_jobs = Job.objects.order_by('-id')[:5]
+
+    context = {
+        'total_jobs': total_jobs,
+        'active_engineers': active_engineers,
+        'completion_rate': completion_rate,
+        'avg_response_time': avg_response_time,
+        'recent_jobs': recent_jobs,
+    }
+    return render(request, 'index.html', context)
+# api/views.py
+from rest_framework import generics
+from core.models import Client
+from .serializers import ClientSerializer
+from rest_framework.permissions import IsAuthenticated
+
+class ClientListCreateView(generics.ListCreateAPIView):
+    queryset = Client.objects.all()
+    serializer_class = ClientSerializer
+    permission_classes = [IsAuthenticated]

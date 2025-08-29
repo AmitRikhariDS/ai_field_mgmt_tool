@@ -20,6 +20,8 @@
   </style>
 </head>
 <body>
+{% if user.is_authenticated %}
+
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-light fixed-top bg-white shadow-sm">
     <div class="container-fluid">
@@ -36,28 +38,37 @@
           </li>
           <li class="nav-item dropdown me-3">
             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-              <img src="https://ui-avatars.com/api/?name=Admin+User&background=3498db&color=fff" alt="User" class="rounded-circle" width="30">
-              <span class="ms-2">Admin User</span>
+              <img src="https://ui-avatars.com/api/?name={{ user.username }}&background=3498db&color=fff" alt="User" class="rounded-circle" width="30">
+              <span class="ms-2">{{ user.username }}</span>
             </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+              <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
+            </ul>
           </li>
         </ul>
       </div>
     </div>
   </nav>
+  <br><br>
 
   <!-- Sidebar -->
   <div class="sidebar">
     <ul class="nav flex-column">
       <li class="nav-item"><a class="nav-link active" href="/"><i class="fas fa-home"></i> <span>Dashboard</span></a></li>
-      <li class="nav-item"><a class="nav-link" href="/jobs/"><i class="fas fa-briefcase"></i> <span>Jobs</span></a></li>
-      <li class="nav-item"><a class="nav-link" href="/engineers/"><i class="fas fa-users"></i> <span>Engineers</span></a></li>
-      <li class="nav-item"><a class="nav-link" href="/clients/"><i class="fas fa-building"></i><span>Clients</span></a></li>
-
-      <li class="nav-item"><a class="nav-link" href="/invoices/"><i class="fas fa-file-invoice"></i> <span>Invoices</span></a></li>
-      <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-calendar-alt"></i> <span>Scheduling</span></a></li>
-      <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-map-marker-alt"></i> <span>Geo-Tracking</span></a></li>
-      <li class="nav-item"><a class="nav-link" href="/reports"><i class="fas fa-chart-bar"></i> <span>Reports</span></a></li>
-      <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-cog"></i> <span>Settings</span></a></li>
+      {% for group in user.groups.all %}
+        {% if group.name == "PMO" or group.name == "Admin" %}
+          <li class="nav-item"><a class="nav-link" href="/jobs/"><i class="fas fa-briefcase"></i> Jobs</a></li>
+          <li class="nav-item"><a class="nav-link" href="/engineers/"><i class="fas fa-users"></i> Engineers</a></li>
+          <li class="nav-item"><a class="nav-link" href="/clients/"><i class="fas fa-building"></i> Clients</a></li>
+        {% endif %}
+        {% if group.name == "Account Team" %}
+          <li class="nav-item"><a class="nav-link" href="/invoices/"><i class="fas fa-file-invoice"></i> Invoices</a></li>
+          <li class="nav-item"><a class="nav-link" href="/reports"><i class="fas fa-chart-bar"></i> Reports</a></li>
+        {% endif %}
+        {% if group.name == "Field Engineer" %}
+          <li class="nav-item"><a class="nav-link" href="/my-jobs/"><i class="fas fa-briefcase"></i> My Jobs</a></li>
+        {% endif %}
+      {% endfor %}
     </ul>
   </div>
 
@@ -67,11 +78,7 @@
       <div class="row mb-4">
         <div class="col-md-6">
           <h1 class="h3 mb-0">Dashboard</h1>
-          <p class="text-muted">Welcome to AI Field Management System</p>
-        </div>
-        <div class="col-md-6 d-flex justify-content-end align-items-center">
-          <button class="btn btn-primary me-2"><i class="fas fa-plus me-1"></i> New Job</button>
-          <button class="btn btn-outline-secondary"><i class="fas fa-filter me-1"></i> Filter</button>
+          <p class="text-muted">Welcome, {{ user.username }}!</p>
         </div>
       </div>
 
@@ -112,7 +119,9 @@
             <div class="card-body p-0">
               <div class="table-responsive">
                 <table class="table table-hover mb-0">
-                  <thead class="table-light"><tr><th>Job ID</th><th>Client</th><th>Engineer</th><th>Status</th><th>Priority</th><th>Action</th></tr></thead>
+                  <thead class="table-light">
+                    <tr><th>Job ID</th><th>Client</th><th>Engineer</th><th>Status</th><th>Priority</th><th>Action</th></tr>
+                  </thead>
                   <tbody></tbody>
                 </table>
               </div>
@@ -125,9 +134,10 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // Dashboard Stats + Jobs
+    // Fetch dashboard stats
     fetch('/api/stats/')
       .then(res => res.json())
       .then(data => {
@@ -141,7 +151,7 @@
         (data.recent_jobs || []).forEach(job => {
           const row = document.createElement('tr');
           row.innerHTML = `
-            <td>${job.job_code || '#'}</td>
+            <td>${job.job_code}</td>
             <td>${job.client ? job.client.name : ''}</td>
             <td>${job.engineer ? job.engineer.name : 'Unassigned'}</td>
             <td><span class="badge bg-${job.status === 'completed' ? 'success' : job.status === 'in_progress' ? 'primary' : 'secondary'}">${job.status}</span></td>
@@ -151,7 +161,7 @@
         });
       });
 
-    // Engineers Section
+    // Fetch engineers
     fetch('/api/engineers/')
       .then(res => res.json())
       .then(engineers => {
@@ -164,14 +174,13 @@
               <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(e.name)}&background=3498db&color=fff" alt="Engineer">
               <h6>${e.name}</h6>
               <span class="badge bg-${statusColor}">${e.status}</span>
-            </div>
-          `;
+            </div>`;
         });
       });
 
-    // Job Status Chart (dummy data)
+    // Job Status Chart (dummy example)
     const ctx = document.getElementById('jobStatusChart').getContext('2d');
-    const jobStatusChart = new Chart(ctx, {
+    new Chart(ctx, {
       type: 'bar',
       data: {
         labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
@@ -185,5 +194,30 @@
     });
   });
   </script>
+
+{% else %}
+  <!-- Login Form -->
+  <div class="container d-flex justify-content-center align-items-center" style="height:100vh;">
+    <div class="card p-4 shadow" style="width:400px;">
+      <h4 class="mb-3">Login</h4>
+      <form method="post" action="{% url 'login' %}">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label for="id_username" class="form-label">Username</label>
+          <input type="text" name="username" id="id_username" class="form-control" placeholder="Enter username" required>
+        </div>
+        <div class="mb-3">
+          <label for="id_password" class="form-label">Password</label>
+          <input type="password" name="password" id="id_password" class="form-control" placeholder="Enter password" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Login</button>
+        {% if form.errors %}
+          <div class="mt-2 text-danger">Invalid username or password</div>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+{% endif %}
+
 </body>
 </html>

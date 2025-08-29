@@ -3,12 +3,28 @@ from django.contrib.auth import get_user_model
 from django.utils.timezone import now
 from datetime import date
 User = get_user_model()
+# class Client(models.Model):
+#     name = models.CharField(max_length=255)
+#     contact_email = models.EmailField(blank=True, null=True)
+#     contact_phone = models.CharField(max_length=30, blank=True, null=True)
+#     def __str__(self):
+#         return self.name
+    
+
+# api/models.py
+from django.db import models
+from django.contrib.auth.models import User
+
 class Client(models.Model):
     name = models.CharField(max_length=255)
     contact_email = models.EmailField(blank=True, null=True)
-    contact_phone = models.CharField(max_length=30, blank=True, null=True)
+    contact_phone = models.CharField(max_length=20, blank=True, null=True)
+    contact_person = models.CharField(max_length=255, blank=True, null=True)
+    
     def __str__(self):
         return self.name
+
+
 from django.db import models
 # from django.utils.timezone import now
 
@@ -113,5 +129,5 @@ class Invoice(models.Model):
 
         super().save(*args, **kwargs)
 
-# models.py in Invoice.save()
+
 
